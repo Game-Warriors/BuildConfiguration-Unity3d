@@ -1,0 +1,20 @@
+{
+  "name": "com.gamewarriors.buildconfiguration",
+  "version": "0.1.0",
+  "displayName": "Build Configuration",
+  "description": "This package provide Configuration editor to manager specific, very common and usefull Define Symbols",
+  "unity": "2019.1",
+  "unityRelease": "0b5",
+  "dependencies": {
+  },
+  "keywords": [
+    "Unity3d",
+    "Define Symbols",
+    "Build Preprocessors"
+  ],
+  "author": {
+    "name": "Game Warriors",
+    "email": "mahdifada.eddini@outlook.com",
+    "url": "https://www.gamewarriorsstudio.com"
+  }
+}

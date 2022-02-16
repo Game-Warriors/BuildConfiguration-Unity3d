@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace GameWrriors.EditorTools.BuildConfiguration.Data
+namespace GameWrriors.BuildConfiguration.Editor.Data
 {
     public enum EBuildType
     {

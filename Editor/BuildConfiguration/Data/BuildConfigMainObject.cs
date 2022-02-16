@@ -4,6 +4,7 @@ namespace GameWrriors.EditorTools.BuildConfiguration.Data
 {
     public enum EBuildType
     {
+        NONE,
         DEVELOPMENT,
         TEST,
         STAGE,

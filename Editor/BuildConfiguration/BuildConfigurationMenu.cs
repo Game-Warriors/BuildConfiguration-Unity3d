@@ -69,7 +69,7 @@ namespace GameWrriors.EditorTools.BuildConfiguration
                         if (Enum.TryParse<EBuildType>(buildTypeString, out var type))
                             buildType = type;
                         else
-                            buildType = EBuildType.DEVELOPMENT;
+                            buildType = EBuildType.NONE;
                     }
 
                     if (!currentDefines.Contains(marketTypeString))
@@ -295,7 +295,7 @@ namespace GameWrriors.EditorTools.BuildConfiguration
                 curretnDefines = Regex.Replace(curretnDefines, replacePattern, "");
             }
 
-            if (buildType != EBuildType.DEVELOPMENT)
+            if (buildType != EBuildType.NONE)
             {
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup,
                     $"{curretnDefines} {buildType.ToString().ToUpper()}");

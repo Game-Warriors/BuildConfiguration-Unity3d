@@ -1,4 +1,4 @@
-﻿using GameWrriors.BuildConfiguration.Editor.Data;
+﻿using GameWarriors.BuildConfiguration.Editor.Data;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -9,7 +9,7 @@ using GoogleMobileAds.Editor;
 
 #endif
 
-namespace GameWrriors.BuildConfiguration.Editor
+namespace GameWarriors.BuildConfiguration.Editor
 {
     public class BuildConfigurationMenu : ScriptableWizard
     {

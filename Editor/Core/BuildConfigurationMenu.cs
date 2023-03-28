@@ -1,4 +1,5 @@
-﻿using GameWarriors.BuildConfiguration.Editor.Data;
+﻿using GameWarriors.BuildConfiguration.Editor.Core;
+using GameWarriors.BuildConfiguration.Editor.Data;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -6,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace GameWarriors.BuildConfiguration.Editor
+namespace GameWarriors.BuildConfiguration.Editor.Core
 {
     public class BuildConfigurationMenu : ScriptableWizard
     {
@@ -52,29 +53,51 @@ namespace GameWarriors.BuildConfiguration.Editor
             BuildConfigMainObject mainAsset = AssetDatabase.LoadAssetAtPath<BuildConfigMainObject>(ASSET_PATH);
             if (mainAsset)
             {
+                BuildTargetGroup targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
                 if (isRefresh)
                 {
                     EBuildType buildType = mainAsset.BuildType;
                     EMarketType marketType = mainAsset.MarketType;
-                    string buildTypeString = buildType.ToString().ToUpper();
-                    string marketTypeString = marketType.ToString().ToUpper();
 
-                    BuildTargetGroup targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
                     string currentDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-                    if (!currentDefines.Contains(buildTypeString))
+                    if (buildType != EBuildType.NONE)
                     {
-                        if (Enum.TryParse<EBuildType>(buildTypeString, out var type))
+                        string buildTypeString = buildType.ToString().ToUpper();
+                        if (!currentDefines.Contains(buildTypeString))
+                        {
+                            string[] defines = Enum.GetNames(typeof(EBuildType));
+                            BuildUtility.CleanScriptingDefineSymbols(targetGroup, defines);
+                            BuildUtility.AddScriptingDefineSymbols(targetGroup, buildTypeString);
+                        }
+                    }
+                    else
+                    {
+                        string define = BuildUtility.FindFirstScriptingDefineSymbol(targetGroup, Enum.GetNames(typeof(EBuildType)));
+                        if (!string.IsNullOrEmpty(define) && Enum.TryParse<EBuildType>(define, out var type))
+                        {
                             buildType = type;
-                        else
-                            buildType = EBuildType.NONE;
+                            _buildType = type;
+                        }
                     }
 
-                    if (!currentDefines.Contains(marketTypeString))
+                    if (marketType != EMarketType.None)
                     {
-                        if (Enum.TryParse<EMarketType>(marketTypeString, out var type))
+                        string marketTypeString = marketType.ToString().ToUpper();
+                        if (!currentDefines.Contains(marketTypeString))
+                        {
+                            string[] defines = Enum.GetNames(typeof(EMarketType));
+                            BuildUtility.CleanScriptingDefineSymbols(targetGroup, defines);
+                            BuildUtility.AddScriptingDefineSymbols(targetGroup, marketTypeString);
+                        }
+                    }
+                    else
+                    {
+                        string define = BuildUtility.FindFirstScriptingDefineSymbol(targetGroup, Enum.GetNames(typeof(EMarketType)));
+                        if (!string.IsNullOrEmpty(define) && Enum.TryParse<EMarketType>(define, out var type))
+                        {
                             marketType = type;
-                        else
-                            marketType = EMarketType.None;
+                            _marketType = type;
+                        }
                     }
 
                     _isUseGameAnalytic = currentDefines.Contains(GAME_ANALYTIC_DEFINE);
@@ -86,9 +109,30 @@ namespace GameWarriors.BuildConfiguration.Editor
                     _isUseAppMetrica = currentDefines.Contains(APPMETRICA_DEFINE);
                     _disableAppMetricaLocation = currentDefines.Contains(APPMETRICA_LOCATION_DEFINE);
                     UpdateMainAsset(ref mainAsset, buildType, marketType);
+                    AssetDatabase.SaveAssetIfDirty(mainAsset);
                 }
                 else
                 {
+
+                    if (mainAsset.BuildType == EBuildType.NONE || !BuildUtility.IsContainScriptingDefineSymbol(targetGroup, mainAsset.BuildType.ToString()))
+                    {
+                        string define = BuildUtility.FindFirstScriptingDefineSymbol(targetGroup, Enum.GetNames(typeof(EBuildType)));
+                        if (!string.IsNullOrEmpty(define) && Enum.TryParse<EBuildType>(define, out var type))
+                        {
+                            mainAsset.BuildType = type;
+                            EditorUtility.SetDirty(mainAsset);
+                        }
+                    }
+
+                    if (mainAsset.MarketType == EMarketType.None || !BuildUtility.IsContainScriptingDefineSymbol(targetGroup, mainAsset.MarketType.ToString()))
+                    {
+                        string define = BuildUtility.FindFirstScriptingDefineSymbol(targetGroup, Enum.GetNames(typeof(EMarketType)));
+                        if (!string.IsNullOrEmpty(define) && Enum.TryParse<EMarketType>(define, out var type))
+                        {
+                            mainAsset.MarketType = type;
+                            EditorUtility.SetDirty(mainAsset);
+                        }
+                    }
                     _buildType = mainAsset.BuildType;
                     _marketType = mainAsset.MarketType;
                     _isUseAdmob = mainAsset.UseAdmob;
@@ -99,9 +143,11 @@ namespace GameWarriors.BuildConfiguration.Editor
                     _isUseAppsFlyer = mainAsset.UseAppsFlyer;
                     _isUseAppMetrica = mainAsset.UseAppMetrica;
                     _disableAppMetricaLocation = mainAsset.DisableAppMetricaLocation;
+                    AssetDatabase.SaveAssetIfDirty(mainAsset);
                 }
             }
         }
+
 
         private void OnWizardCreate()
         {
@@ -202,7 +248,6 @@ namespace GameWarriors.BuildConfiguration.Editor
         private void SetAppsFlyerState(bool isUse, BuildTargetGroup targetGroup)
         {
             UpdateScriptingDefineSymbolsForPlugin(isUse, APPS_FLYER_DEFINE, targetGroup);
-
         }
 
         private void SetGameAnalyticState(bool isUse, BuildTargetGroup targetGroup)
@@ -280,7 +325,7 @@ namespace GameWarriors.BuildConfiguration.Editor
 
         private void UpdateScriptingDefineSymbolsForBuildType(EBuildType buildType, BuildTargetGroup targetGroup)
         {
-            string curretnDefines = GetScriptingDefineSymbols(targetGroup);
+            string curretnDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
             // \b means whole word.
             //Remove already existing build type and add new one.
             string[] buildTypes = Enum.GetNames(typeof(EBuildType));
@@ -303,7 +348,7 @@ namespace GameWarriors.BuildConfiguration.Editor
 
         private void UpdateScriptingDefineSymbolsForMarketType(EMarketType newType, BuildTargetGroup targetGroup)
         {
-            string curretnDefines = GetScriptingDefineSymbols(targetGroup);
+            string curretnDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
             // \b means whole word.
             //Remove already existing build type and add new one.
             string[] marketTypes = Enum.GetNames(typeof(EMarketType));
@@ -333,19 +378,10 @@ namespace GameWarriors.BuildConfiguration.Editor
 
         private void UpdateScriptingDefineSymbolsForPlugin(bool isUse, string symbol, BuildTargetGroup targetGroup)
         {
-            string currentDefines = GetScriptingDefineSymbols(targetGroup);
-            currentDefines = Regex.Replace(currentDefines, symbol, "");
             if (isUse)
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, $"{currentDefines};{symbol}");
+                BuildUtility.AddScriptingDefineSymbols(targetGroup, symbol);
             else
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, $"{currentDefines}");
-        }
-
-        private string GetScriptingDefineSymbols(BuildTargetGroup targetGroup)
-        {
-            string curretnDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-            curretnDefines = curretnDefines.Replace(";", " ");
-            return curretnDefines;
+                BuildUtility.RemoveScriptingDefineSymbols(targetGroup, symbol);
         }
 
         private void UpdateLunarConsoleState(EBuildType buildType)

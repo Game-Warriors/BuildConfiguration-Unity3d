@@ -7,6 +7,7 @@ namespace GameWarriors.BuildConfiguration.Editor.Data
         NONE,
         DEVELOPMENT,
         TEST,
+        QA,
         STAGE,
         PRODUCTION
     }

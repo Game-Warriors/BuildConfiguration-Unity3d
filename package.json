@@ -1,6 +1,6 @@
 {
   "name": "com.gamewarriors.buildconfiguration",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "displayName": "Build Configuration",
   "description": "This package provide Configuration editor to manager specific, very common and usefull Define Symbols",
   "unity": "2019.1",
